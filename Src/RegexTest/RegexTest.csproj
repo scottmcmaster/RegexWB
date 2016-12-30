@@ -174,9 +174,8 @@
     <Compile Include="Settings.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TextBoxHoverable.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="StringMaker.cs" />
+    <Compile Include="TextBoxHoverable.cs" />
     <Content Include="App.ico" />
     <Content Include="Readme.txt" />
     <Content Include="todo.txt" />

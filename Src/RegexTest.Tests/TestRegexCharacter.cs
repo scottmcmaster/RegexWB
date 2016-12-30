@@ -6,10 +6,6 @@ namespace RegexTest
     [TestFixture]
     public class TestRegexCharacter
     {
-        public TestRegexCharacter()
-        {
-        }
-
         [Test]
         public void TestSpace()
         {

@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestInterpret.cs" />
+    <Compile Include="TestStringMaker.cs" />
     <Compile Include="TestRegexCharacter.cs" />
     <Compile Include="TestInterpretAnchor.cs" />
     <Compile Include="TestInterpretGrouping.cs" />
