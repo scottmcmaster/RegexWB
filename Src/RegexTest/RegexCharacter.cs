@@ -9,14 +9,17 @@ namespace RegexTest
 	/// </summary>
 	public class RegexCharacter: RegexItem
 	{
-		string character;
-		bool special;
+	    public const string AnyCharacterDescription = ". (any character)";
+        public const string OneOrMoreTimesDescription = "+ (one or more times)";
+        public const string ZeroOrMoreTimesDescription = "* (zero or more times)";
+        public const string ZeroOrOneTimeDescription = "? (zero or one time)";
+        public const string AnchorToStartOfStringDescription = "^ (anchor to start of string)";
+        public const string AnchorToEndOfStringDescription = "$ (anchor to end of string)";
+        public const string SpaceDescription = "' ' (space)";
+	    public const string BackreferenceToMatchDescriptionTemplate = "Backreference to match: {0}";
 
-			// used to coalesce single-character items together
-		public RegexCharacter(string characters)
-		{
-			this.character = characters;
-		}
+	    string character;
+		bool special;
 
 		public RegexCharacter(RegexBuffer buffer)
 		{
@@ -26,44 +29,44 @@ namespace RegexTest
 			switch (buffer.Current)
 			{
 				case '.':
-					character = ". (any character)";
+					character = AnyCharacterDescription;
 					buffer.MoveNext();
 					special = true;
 					break;
 
 				case '+':
-					character = "+ (one or more times)";
+					character = OneOrMoreTimesDescription;
 					buffer.MoveNext();
 					special = true;
 					quantifier = true;
 					break;
 
 				case '*':
-					character = "* (zero or more times)";
+					character = ZeroOrMoreTimesDescription;
 					buffer.MoveNext();
 					special = true;
 					quantifier = true;
 					break;
 
 				case '?':
-					character = "? (zero or one time)";
+					character = ZeroOrOneTimeDescription;
 					buffer.MoveNext();
 					special = true;
 					quantifier = true;
 					break;
 
 				case '^':
-					character = "^ (anchor to start of string)";
+					character = AnchorToStartOfStringDescription;
 					buffer.MoveNext();
 					break;
 
 				case '$':
-					character = "$ (anchor to end of string)";
+					character = AnchorToEndOfStringDescription;
 					buffer.MoveNext();
 					break;
 
 				case ' ':
-					character = "' ' (space)";
+					character = SpaceDescription;
 					buffer.MoveNext();
 					break;
 
@@ -140,7 +143,7 @@ namespace RegexTest
 							break;
 
 						case ' ':
-							character = "' ' (space)";
+							character = SpaceDescription;
 							special = false;
 							buffer.MoveNext();
 							break;
@@ -185,7 +188,7 @@ namespace RegexTest
 			if (match.Success)
 			{
 				special = true;
-				this.character = String.Format("Backreference to match: {0}", match.Groups["Name"]);
+				this.character = String.Format(BackreferenceToMatchDescriptionTemplate, match.Groups["Name"]);
 				buffer.Offset += match.Groups[0].Length;
 				return true;
 			}
