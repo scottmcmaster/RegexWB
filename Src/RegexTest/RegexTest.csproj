@@ -126,12 +126,14 @@
     <Compile Include="HoverTooltip.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="IRegexTestView.cs" />
     <Compile Include="LibraryMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="MakeAssemblyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="RegexActions.cs" />
     <Compile Include="RegexAlternate.cs">
       <SubType>Code</SubType>
     </Compile>

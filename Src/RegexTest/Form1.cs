@@ -17,7 +17,7 @@ namespace RegexTest
 	/// <summary>
 	/// Summary description for Form1.
 	/// </summary>
-	public class Form1 : System.Windows.Forms.Form
+	public class Form1 : System.Windows.Forms.Form, IRegexTestView
 	{
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Label label2;
@@ -167,8 +167,9 @@ namespace RegexTest
 		private System.Windows.Forms.MenuItem menuReleaseNotes;
 		MenuItem contextMenuBackreferences = null;
         private StringMaker stringMaker = new StringMaker();
+	    private readonly RegexActions actions;
 
-        public Form1()
+	    public Form1()
 		{
 			//
 			// Required for Windows Form Designer support
@@ -206,6 +207,8 @@ namespace RegexTest
 					this.contextMenuBackreferences = subItem;
 				}
 			}
+
+		    this.actions = new RegexActions(this);
 		}
 
 		/// <summary>
@@ -1402,7 +1405,7 @@ namespace RegexTest
 			Application.Run(new Form1());
 		}
 
-		private void SaveValues()
+		public void SaveValues()
 		{
 			SaveRegex(Environment.GetFolderPath(Environment.SpecialFolder.Personal) +
 					  "\\regex.xml");
@@ -1660,109 +1663,12 @@ namespace RegexTest
 
 		private void Split_Click(object sender, System.EventArgs e)
 		{
-			SaveValues();
-			Regex regex = null;
-			try
-			{
-				regex = CreateRegex();
-			}
-			catch (Exception ex)
-			{
-				Output.Text = ex.ToString();
-				return;
-			}
-
-			string[] strings;
-			// if checked, pass all lines as a single block
-			if (OneString.Checked)
-			{
-				strings = new string[1];
-				strings[0] = Strings.Text;
-			}
-			else
-			{
-				strings = Regex.Split(Strings.Text, @"\r\n");
-				//strings = Strings.Text.Split('\n\r');
-			}
-
-			StringBuilder outString = new StringBuilder();
-			foreach (string s in strings)
-			{
-				outString.Append(String.Format("Splitting: {0}\r\n", s));			
-
-				string[] arr = regex.Split(s);
-
-				int index = 0;
-				foreach (string split in arr)
-				{
-					outString.Append(String.Format("    [{0}] => {1}\r\n", index, split));
-					index++;
-				}
-			}
-			Output.Text = outString.ToString();
-
+            actions.Split();
 		}
 
 		private void Replace_Click(object sender, System.EventArgs e)
 		{
-			SaveValues();
-			Regex regex = null;
-			try
-			{
-				regex = CreateRegex();
-			}
-			catch (Exception ex)
-			{
-				Output.Text = ex.ToString();
-				return;
-			}
-
-			string[] strings;
-			// if checked, pass all lines as a single block
-			if (OneString.Checked)
-			{
-				strings = new string[1];
-				strings[0] = Strings.Text;
-			}
-			else
-			{
-				strings = Regex.Split(Strings.Text, @"\r\n");
-				//strings = Strings.Text.Split('\n\r');
-			}
-
-			ReplaceMatchEvaluator replacer = null;
-
-			if (MatchEvaluator.Checked)
-			{
-				replacer = new ReplaceMatchEvaluator(regex, ReplaceString.Text);
-				string output = replacer.CreateAndLoadClass();
-				if (output != null)
-				{
-					Output.Text = output;
-					return;
-				}
-			}
-
-			StringBuilder outString = new StringBuilder();
-			string replace = ReplaceString.Text;
-			foreach (string s in strings)
-			{
-				outString.Append(String.Format("Replacing: {0}\r\n", s));
-				
-				string output = null;
-				if (this.MatchEvaluator.Checked)
-				{
-					outString.Append("  with a custom MatchEvaluator\r\n");	
-					output = regex.Replace(s, replacer.MatchEvaluator);
-				}
-				else
-				{
-					outString.Append(String.Format("  with: {0}\r\n", replace));	
-					output = regex.Replace(s, replace); 
-				}
-				outString.Append(String.Format("  result: {0}\r\n", output));
-			}
-			Output.Text = outString.ToString();
+            actions.Replace();
 		}
 
 		private void makeAssemblyItem_Click(object sender, System.EventArgs e)
@@ -1975,79 +1881,9 @@ namespace RegexTest
 			// get the contents of a C# regex, and make it nicer...
 		private void pasteFromCSharp_Click(object sender, System.EventArgs e)
 		{
-			IDataObject clipboard = Clipboard.GetDataObject();
-			string value = (string) clipboard.GetData(typeof(string));
-
-				// first, get rid of the "Regex regex line, if it exists"
-			Regex regex2 = new Regex(@"
-				^.+?new\ Regex\(@""(?<Rest>.+)
-				", 
-				RegexOptions.Multiline | 
-				RegexOptions.ExplicitCapture | 
-				RegexOptions.Singleline | 
-				RegexOptions.IgnorePatternWhitespace);
-
-			Match m = regex2.Match(value);
-			if (m.Success)
-			{
-				value = m.Groups["Rest"].Value;
-			}
-
-				// get rid of the leading whitespace on each line...
-			Regex regex = new Regex(@"
-				^\s+
-				", 
-				RegexOptions.Multiline | 
-				RegexOptions.ExplicitCapture | 
-				RegexOptions.IgnorePatternWhitespace);
-
-			value = regex.Replace(value, "");
-
-				// see if there is a " and options after the string...
-			Regex regex3 = new Regex(@"
-				(?<Pattern>.+)^\s*"",(?<Rest>.+)
-				", 
-				RegexOptions.Multiline | 
-				RegexOptions.ExplicitCapture | 
-				RegexOptions.Singleline | 
-				RegexOptions.IgnorePatternWhitespace);
-
-			m = regex3.Match(value);
-			if (m.Success)
-			{
-				value = m.Groups["Pattern"].Value;
-
-					// clear all the patterns, and then set the ones
-					// that are on...
-				this.IgnoreCase.Checked = false;
-				this.IgnoreWhitespace.Checked = false;
-				this.Multiline.Checked = false;
-				this.Singleline.Checked = false;
-				this.Compiled.Checked = false;
-				this.ExplicitCapture.Checked = false;
-
-				string rest = m.Groups["Rest"].Value;
-				if (rest.IndexOf("IgnoreCase") != -1)
-					this.IgnoreCase.Checked = true;
-
-				if (rest.IndexOf("IgnorePatternWhitespace") != -1)
-					this.IgnoreWhitespace.Checked = true;
-
-				if (rest.IndexOf("Multiline") != -1)
-					this.Multiline.Checked = true;
-
-				if (rest.IndexOf("Singleline") != -1)
-					this.Singleline.Checked = true;
-
-				if (rest.IndexOf("Compiled") != -1)
-					this.Compiled.Checked = true;
-
-				if (rest.IndexOf("ExplicitCapture") != -1)
-					this.ExplicitCapture.Checked = true;
-			}
-
-				// change any double "" to "
-			RegexText.Text = value.Replace("\"\"", "\"");
+            IDataObject clipboard = Clipboard.GetDataObject();
+            string value = (string)clipboard.GetData(typeof(string));
+            actions.PasteFromCSharp(value);
 		}
 
 		private void copyAsCSharp_Click(object sender, System.EventArgs e)
@@ -2172,5 +2008,80 @@ namespace RegexTest
 			ReleaseNotes releaseNotes = new ReleaseNotes();
 			releaseNotes.ShowDialog();
 		}
+
+	    string IRegexTestView.Output
+	    {
+	        get { return Output.Text; }
+	        set { Output.Text = value; }
+	    }
+
+	    bool IRegexTestView.OneString
+	    {
+	        get { return OneString.Checked; }
+	    }
+
+	    string IRegexTestView.Strings
+	    {
+	        get { return Strings.Text; }
+	    }
+
+	    bool IRegexTestView.MatchEvaluator
+	    {
+	        get { return MatchEvaluator.Checked; }
+	    }
+
+	    string IRegexTestView.ReplaceString
+	    {
+	        get { return ReplaceString.Text; }
+            set { ReplaceString.Text = value; }
+	    }
+
+	    string IRegexTestView.RegexText
+	    {
+	        get { return RegexText.Text; } 
+	        set { RegexText.Text = value; }
+	    }
+
+	    bool IRegexTestView.IgnoreWhitespace
+	    {
+	        get { return IgnoreWhitespace.Checked; } 
+	        set { IgnoreWhitespace.Checked = value; }
+	    }
+
+	    bool IRegexTestView.IgnoreCase
+	    {
+	        get
+	        {
+	            return IgnoreCase.Checked;
+	        }
+	        set { IgnoreCase.Checked = value; }
+	    }
+
+	    bool IRegexTestView.Compiled
+	    {
+	        get { return Compiled.Checked; }
+	        set { Compiled.Checked = value; }
+	    }
+
+	    bool IRegexTestView.ExplicitCapture {
+            get { return ExplicitCapture.Checked; }
+            set
+	        {
+	            ExplicitCapture.Checked = value;
+	        }
+        }
+
+	    bool IRegexTestView.Singleline
+	    {
+	        get { return Singleline.Checked; } 
+	        set { Singleline.Checked = value; }
+	    }
+
+	    bool IRegexTestView.Multiline
+	    {
+	        get { return Multiline.Checked; } 
+	        set { Multiline.Checked = value; }
+	    }
+
 	}
 }
