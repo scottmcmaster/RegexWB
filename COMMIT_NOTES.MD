@@ -27,12 +27,12 @@ public const string SpaceDescription = "' ' (space)";
 Assert.AreEqual(RegexCharacter.SpaceDescription, reChar.ToString(0));
 ```
 
-With that, and a couple additional tests, I was able to bring coverage up to 100% (from 87%) with about 20 minutes of effort, much of which was just to understand the class that I wasn't previously familiar with.
+With that, and a couple additional tests, I was able to bring coverage for the class in question up to 100% (from 87%) with about 20 minutes of effort, much of which was just to understand the class that I wasn't previously familiar with.
 
 # Commit #2
 What about the UI? There is an interesting question of how we should treat testing in the area of WinForms...
 
-Looking at Form1, there are clearly some separable "business logic" components that can be split out. Probably the easiest thing to do is directly pull out helper methods with parameters and feed them from the UI. Take StringMaker as an example -- the methods MakeCSharpString and MakeVSString are easy to parameterize. These methods *could* be static, but static classes/methods typically aren't great for unit testing, and in this case it's not too hard to imagine StringMaker at some point having member variables.
+Looking at Form1, there are clearly some separable "business logic" components that can be split out. Probably the easiest thing to do is directly pull out helper methods with parameters and feed them from the UI. Take StringMaker as an example -- the methods MakeCSharpString and MakeVBString are easy to parameterize. These methods *could* be static, but static classes/methods typically aren't great for unit testing, and in this case it's not too hard to imagine StringMaker at some point having member variables.
 
 # Commit #3
 One approach that I've found to be effective in making legacy WinForms code testable on our project is to create an "actions" class to hold logic that operates on UI properties, then make that actions class work against an interface with all of the necessary properties and methods. Then have the form explicitly implement the interface, create an actions class as a field passing "this" to the ctor, and delegate to it in event handlers. It's basically an implementation of MVP, except in this case there's not necessarily any reason to separate out the model class. When all of that is complete, it's possible to unit-test the action class using mock objects.
